@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const globalErrorHandler = require("./utils/errors/errorController");
 const AppError = require("./utils/errors/AppError");
 const videoRouter = require("./routes/videos");
+const Connect = require("./utils/Db.config");
 require("dotenv").config();
 
 const app = express();
@@ -33,8 +34,8 @@ app.all("*", (req, res, next) => {
 app.use(globalErrorHandler);
 
 const Port = process.env.PORT || 7070;
-const server = app.listen(Port, () =>
-  console.log(`Server runing on localhost ${Port}`)
+const server = Connect().then(() =>
+  app.listen(Port, () => console.log(`Server runing on localhost ${Port}`))
 );
 
 //Handling unHandled Rejections
