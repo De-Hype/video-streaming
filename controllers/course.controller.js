@@ -123,6 +123,7 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
     success: true,
     message: "Course fetched succesfully",
     findCourseById,
+    findVideoById,
     video: videoBuffer.toString('base64'),
   });
   
