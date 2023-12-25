@@ -107,7 +107,9 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
 
   // const newId = findCourseById;
   const findVideoById = await Modules.findById(findIfVideoExistInsideCourse);
-
+  if (findVideoById.subscriptionRequired==true){
+    return next(new AppError("You have not subscribed to this course", 401));
+  }
   // res.setHeader("Content-Type", "video/*");
   //Getting Video From Firebase
   const file = bucket.file(findVideoById.firebase_id);

@@ -26,9 +26,6 @@ router.post(
   catchAsync(async (req, res, next) => {
     const {email, password} = req.body;
 
-    
-module.exports.SignIn = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
   const findUser = await User.findOne({ email });
   if (!findUser) {
     return next(new AppError("User does not exist", 402));
@@ -43,6 +40,4 @@ module.exports.SignIn = catchAsync(async (req, res, next) => {
   res
     .status(202)
     .json({ status: "ok", message: "User succesfully logged in", findUser });
-});
-  })
-);
+}))
