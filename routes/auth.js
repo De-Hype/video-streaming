@@ -24,8 +24,7 @@ router.post(
 router.post(
   "/login",
   catchAsync(async (req, res, next) => {
-    const {email, password} = req.body;
-
+  const {email, password} = req.body;
   const findUser = await User.findOne({ email });
   if (!findUser) {
     return next(new AppError("User does not exist", 402));

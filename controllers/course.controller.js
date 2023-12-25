@@ -82,7 +82,7 @@ module.exports.CreateCourses = catchAsync(async (req, res, next) => {
 module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   //We will get the id of the course from params.
   const courseId = req.body.courseId;
-  
+
   const range = req.headers.range;
   // `bytes=0-499`
   //If there is no videoId present, we only fetch the free video, which is the demo video
@@ -95,16 +95,15 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   //   return next(new AppError("Video with this ID does not exist", 403));
   // }
   const innerCourseId = findCourseById.modules;
-  const videoId = req.body.videoId || [0];
-  console.log(innerCourseId);
+  const videoId = req.body.videoId || innerCourseId[0];
+  
   const findIfVideoExistInsideCourse = innerCourseId.find(
     (id) => id == videoId
   );
   if (findIfVideoExistInsideCourse == undefined || null) {
     return next(new AppError("Course with this ID does not exist", 403));
   }
-  console.log(findIfVideoExistInsideCourse);
-
+  
   // const newId = findCourseById;
   const findVideoById = await Modules.findById(findIfVideoExistInsideCourse);
   if (findVideoById.subscriptionRequired==true){
@@ -114,7 +113,7 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   //Getting Video From Firebase
   const file = bucket.file(findVideoById.firebase_id);
   const [videoBuffer] = await file.download();
-  console.log(videoBuffer);
+  
   // //Getting MetaData about the video file to determine its size
   // const fileStat = await file.getMetadata();
   // const fileSize = fileStat[0].size;
