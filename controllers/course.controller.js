@@ -124,7 +124,7 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   //   return next(new AppError("Video with this ID does not exist", 403));
   // }
   const innerCourseId = findCourseById.modules;
-  const videoId = req.body.videoId || innerCourseId[0];
+  const videoId = req.params.videoId || innerCourseId[0];
 
   const findIfVideoExistInsideCourse = innerCourseId.find(
     (id) => id == videoId

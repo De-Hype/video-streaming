@@ -17,7 +17,7 @@ router.post(
   "/create-course",
   CreateCourses
 );
-router.get('/get-course-details/:courseId', GetCourseDetails)
+router.get('/get-course-details/:courseId/:videoId', GetCourseDetails)
 router.get('/all-courses', GetAllCourses)
 // router.get(
 //   "/get-all",
