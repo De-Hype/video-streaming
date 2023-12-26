@@ -1,15 +1,23 @@
 const catchAsync = require("../utils/errors/catchAsync");
 const crypto = require("crypto");
-const ffmpeg = require("fluent-ffmpeg");
-const upload = require("../utils/multer");
+// const ffmpeg = require("fluent-ffmpeg");
+// const upload = require("../utils/multer");
 const encryptVideo = require("../utils/encryptVideo");
 const path = require("path");
+const { initializeApp } = require("firebase/app");
+const {
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+} = require("firebase/storage");
 const bucket = require("../utils/firebase.config");
 const Modules = require("../models/modules.schema");
 const AppError = require("../utils/errors/AppError");
 const Courses = require("../models/courses.model");
-const fs = require("fs");
-const getVideoDurationInSeconds = require("get-video-duration");
+const firebaseConfig = require("../utils/firebase.config");
+// const fs = require("fs");
+// const getVideoDurationInSeconds = require("get-video-duration");
 const key = Buffer.from(process.env.key, "hex");
 const iv = Buffer.from(process.env.iv, "hex");
 
@@ -38,12 +46,33 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   const encryptedFile = encryptVideo(file.buffer, key, iv);
   const filename =
     crypto.randomBytes(16).toString("hex") + path.extname(file.originalname);
-  const fileUpload = bucket.file(filename);
-  await fileUpload.save(encryptedFile);
+  //Initialize a firebase application
+  initializeApp(firebaseConfig);
+  // Initialize Cloud Storage and get a reference to the service
+  const storage = getStorage();
+  // Create file metadata including the content type
+  const metadata = {
+    contentType: req.file.mimetype,
+  };
+  const storageRef = ref(storage, filename);
+
+  // Upload the file in the bucket storage
+  const snapshot = await uploadBytesResumable(
+    storageRef,
+    encryptedFile,
+    metadata
+  ); 
+  // Grab the public url
+  const downloadURL = await getDownloadURL(snapshot.ref);
+
+  console.log("File successfully uploaded.");
+
+  // const fileUpload = bucket.file(filename);
+  // await fileUpload.save(encryptedFile);
 
   const createLessons = await Modules({
     module_name,
-    firebase_id: filename,
+    firebase_id: downloadURL,
     // duration: durationInSeconds,
     subscriptionRequired,
   });
@@ -52,7 +81,7 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: " Video succesfully uploaded",
-    filename,
+    downloadURL,
     createLessons,
   });
 });
@@ -81,12 +110,12 @@ module.exports.CreateCourses = catchAsync(async (req, res, next) => {
 });
 module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   //We will get the id of the course from params.
-  const courseId = req.body.courseId;
+  const courseId = req.params.courseId;
 
-  const range = req.headers.range;
+  // const range = req.headers.range;
   // `bytes=0-499`
   //If there is no videoId present, we only fetch the free video, which is the demo video
-  const findCourseById = await Courses.findById(courseId);
+  const findCourseById = await Courses.findById(courseId).populate('modules');
   if (!findCourseById) {
     return next(new AppError("Course with this ID does not exist", 403));
   }
@@ -96,24 +125,24 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   // }
   const innerCourseId = findCourseById.modules;
   const videoId = req.body.videoId || innerCourseId[0];
-  
+
   const findIfVideoExistInsideCourse = innerCourseId.find(
     (id) => id == videoId
   );
   if (findIfVideoExistInsideCourse == undefined || null) {
     return next(new AppError("Course with this ID does not exist", 403));
   }
-  
+
   // const newId = findCourseById;
-  const findVideoById = await Modules.findById(findIfVideoExistInsideCourse);
-  if (findVideoById.subscriptionRequired==true){
+  const videoToPlay = await Modules.findById(findIfVideoExistInsideCourse);
+  if (videoToPlay.subscriptionRequired == true) {
     return next(new AppError("You have not subscribed to this course", 401));
   }
   // res.setHeader("Content-Type", "video/*");
   //Getting Video From Firebase
-  const file = bucket.file(findVideoById.firebase_id);
-  const [videoBuffer] = await file.download();
-  
+  // const file = bucket.file(findVideoById.firebase_id);
+  // const [videoBuffer] = await file.download();
+
   // //Getting MetaData about the video file to determine its size
   // const fileStat = await file.getMetadata();
   // const fileSize = fileStat[0].size;
@@ -122,11 +151,10 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
     status: "ok",
     success: true,
     message: "Course fetched succesfully",
-    findCourseById,
-    findVideoById,
-    video: videoBuffer.toString('base64'),
+    courseDetails:findCourseById,
+    videoToPlay,
+   
   });
-  
 
   // }
 

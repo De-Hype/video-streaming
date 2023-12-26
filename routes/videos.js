@@ -17,20 +17,20 @@ router.post(
   "/create-course",
   CreateCourses
 );
-router.get('/get-course-details', GetCourseDetails)
+router.get('/get-course-details/:courseId', GetCourseDetails)
 router.get('/all-courses', GetAllCourses)
-router.get(
-  "/get-all",
-  catchAsync(async (req, res, next) => {
-    const [files] = await bucket.getFiles();
-    const fileList = files.map((file) => ({ filename: file.name }));
-    res.status(200).json({
-      success: true,
-      message: " Videos fetched Succesfully",
-      videos: fileList,
-    });
-  })
-);
+// router.get(
+//   "/get-all",
+//   catchAsync(async (req, res, next) => {
+//     const [files] = await bucket.getFiles();
+//     const fileList = files.map((file) => ({ filename: file.name }));
+//     res.status(200).json({
+//       success: true,
+//       message: " Videos fetched Succesfully",
+//       videos: fileList,
+//     });
+//   })
+// );
 
 // router.get(
 //   "/fetch-video/:filename",
