@@ -55,13 +55,12 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
     contentType: req.file.mimetype,
   };
   const storageRef = ref(storage, filename);
-
   // Upload the file in the bucket storage
   const snapshot = await uploadBytesResumable(
     storageRef,
     encryptedFile,
     metadata
-  ); 
+  );
   // Grab the public url
   const downloadURL = await getDownloadURL(snapshot.ref);
 
@@ -80,8 +79,8 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    message: " Video succesfully uploaded",
-    downloadURL,
+    message: "Course module succesfully uploaded",
+
     createLessons,
   });
 });
@@ -109,20 +108,13 @@ module.exports.CreateCourses = catchAsync(async (req, res, next) => {
   });
 });
 module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
-  //We will get the id of the course from params.
   const courseId = req.params.courseId;
 
-  // const range = req.headers.range;
-  // `bytes=0-499`
-  //If there is no videoId present, we only fetch the free video, which is the demo video
-  const findCourseById = await Courses.findById(courseId).populate('modules');
+  const findCourseById = await Courses.findById(courseId).populate("modules");
   if (!findCourseById) {
     return next(new AppError("Course with this ID does not exist", 403));
   }
-  // const getLessonDetails = await findCourseById.findById(videoId);
-  // if (!getLessonDetails) {
-  //   return next(new AppError("Video with this ID does not exist", 403));
-  // }
+
   const innerCourseId = findCourseById.modules;
   const videoId = req.body.videoId || innerCourseId[0];
 
@@ -130,7 +122,12 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
     (id) => id == videoId
   );
   if (findIfVideoExistInsideCourse == undefined || null) {
-    return next(new AppError("Course with this ID does not exist", 403));
+    return next(
+      new AppError(
+        "You do not have access to this lesson. Kindly purchase the course to have access",
+        403
+      )
+    );
   }
 
   // const newId = findCourseById;
@@ -138,57 +135,18 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   if (videoToPlay.subscriptionRequired == true) {
     return next(new AppError("You have not subscribed to this course", 401));
   }
-  // res.setHeader("Content-Type", "video/*");
-  //Getting Video From Firebase
-  // const file = bucket.file(findVideoById.firebase_id);
-  // const [videoBuffer] = await file.download();
 
   // //Getting MetaData about the video file to determine its size
   // const fileStat = await file.getMetadata();
   // const fileSize = fileStat[0].size;
   // console.log(range);
-  res.status(202).json({
+  res.status(200).json({
     status: "ok",
     success: true,
-    message: "Course fetched succesfully",
-    courseDetails:findCourseById,
+    message: "Course details fetched succesfully",
+    courseDetails: findCourseById,
     videoToPlay,
-   
   });
-
-  // }
-
-  // if (range) {
-  //   const parts = range.replace(/bytes=/, "").split("-");
-  //   const start = parseInt(parts[0], 10);
-  //   const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-  //   //Calculating the chunk size
-  //   const chunkSize = end - start + 1;
-  //   //Creating a readable stream
-  //   const readStream = file.createReadStream({ start, end });
-  //   res.writeHead(206, {
-  //     "Content-Range": `bytes ${start} - ${end} / ${fileSize}`,
-  //     "Accept-Ranges": "bytes",
-  //     "Content-Length": chunkSize,
-  //     "Content-Type": "video/*",
-  //   });
-  //   readStream.pipe(res);
-  // } else {
-  //   const readStream = file.createReadStream();
-  //   res.writeHead(206, {
-  //     "Content-Length": fileSize,
-  //     "Content-Type": "video/*",
-  //   });
-  //   //   readStream.pipe(res);
-  //   res.status(202).json({
-  //     status: "ok",
-  //     success: true,
-  //     message: "Course fetched succesfully",
-  //   });
-  // }
-  //We will find the course on our database with that particular Id
-  //We will fetch all the course with that Id from firebase
-  //
 });
 
 module.exports.GetAllCourses = catchAsync(async (req, res, next) => {
@@ -196,7 +154,7 @@ module.exports.GetAllCourses = catchAsync(async (req, res, next) => {
   res.status(202).json({
     status: "ok",
     success: true,
-    message: "Course fetched succesfully",
+    message: "All Courses fetched succesfully",
     AllCourses,
   });
 });

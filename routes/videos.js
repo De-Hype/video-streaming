@@ -11,7 +11,7 @@ const router = require("express").Router();
 require("dotenv").config();
 
 
-router.post("/post-video", upload.single("video"), UploadVideo);
+router.post("/course-upload", upload.single("video"), UploadVideo);
 
 router.post(
   "/create-course",
