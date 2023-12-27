@@ -2,8 +2,7 @@ const crypto = require("crypto");
 const AppError = require("./errors/AppError");
 
 async function encryptVideo(buffer, key, iv) {
-    console.log(key.length)
-    console.log(iv.length)
+    
   if (key.length !== 32) {
     throw new Error("Your encryption key must be 32 bytes for aes-256-cbc");
   }
