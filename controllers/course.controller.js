@@ -96,7 +96,7 @@ module.exports.CreateCourses = catchAsync(async (req, res, next) => {
   if (findCourseByName) {
     return next(new AppError("Course with this name already exist", 403));
   }
-  console.log(title, creator, thumbnail, description, modulesId);
+  
   const createCourse = await Courses({
     title,
     creator,
