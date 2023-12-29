@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const xss = require('xss-clean');
+const mongoSanitize = require('express-mongo-sanitize');
 const morgan = require("morgan");
 const globalErrorHandler = require("./utils/errors/errorController");
 const AppError = require("./utils/errors/AppError");
@@ -22,7 +23,8 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
-app.use(xss())
+app.use(xss());
+app.use(mongoSanitize())
 app.use("/api", videoRouter);
 
 app.all("*", (req, res, next) => {
