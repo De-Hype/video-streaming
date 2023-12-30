@@ -130,10 +130,10 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
       path: "modules",
     },
   });
-  // console.log(innerCourseId)
   
-  const videoId = req.body.videoId || innerCourseId.lessons[0].modules[0].id;
-  // console.log(videoId)
+  // const videoId = req.body.videoId || innerCourseId.lessons[0].modules[0].id;
+  // console.log(videoId);
+
   // return res.json({innerCourseId})
   
   // const findIfVideoExistInsideCourse = innerCourseId.lessons[0].modules.find(
