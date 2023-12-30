@@ -27,7 +27,7 @@ const iv = Buffer.from(process.env.iv, "hex");
 module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   //This was to store encrypted file or video
   const file = req.file;
-  
+
   const { module_name, subscriptionRequired } = req.body;
   // const readstream = file.createReadStream()
   // console.log(stream);
@@ -48,7 +48,7 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   // });
 
   const encryptedFile = await encryptVideo(file.buffer, key, iv);
-  
+
   const filename =
     crypto.randomBytes(16).toString("hex") + path.extname(file.originalname);
   //Initialize a firebase application
@@ -68,8 +68,6 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   );
   // Grab the public url
   const downloadURL = await getDownloadURL(snapshot.ref);
-
-
 
   // const fileUpload = bucket.file(filename);
   // await fileUpload.save(encryptedFile);
@@ -91,18 +89,18 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
 });
 
 module.exports.CreateCourses = catchAsync(async (req, res, next) => {
-  const { title, creator, thumbnail, description, modulesId } = req.body;
+  const { title, creator, thumbnail, description, lessons } = req.body;
   const findCourseByName = await Courses.findOne({ title });
   if (findCourseByName) {
     return next(new AppError("Course with this name already exist", 403));
   }
-  
+
   const createCourse = await Courses({
     title,
     creator,
     thumbnail,
     description,
-    modules: modulesId,
+    lessons,
   });
   await createCourse.save();
 
@@ -126,27 +124,36 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
     );
   }
 
-  const innerCourseId = await findCourseById.populate("modules");
-
-  const videoId = req.body.videoId || innerCourseId.modules[0];
-
-  const findIfVideoExistInsideCourse = innerCourseId.modules.find(
-    (id) => id == videoId
-  );
-  if (findIfVideoExistInsideCourse == undefined || null) {
-    return next(
-      new AppError(
-        "You do not have access to this lesson. Kindly purchase the course to have access",
-        403
-      )
-    );
-  }
-
-  // const newId = findCourseById;
-  const videoToPlay = await Modules.findById(findIfVideoExistInsideCourse);
-  if (videoToPlay.subscriptionRequired == true) {
-    return next(new AppError("You have not subscribed to this course", 401));
-  }
+  const innerCourseId = await findCourseById.populate({
+    path: "lessons",
+    populate: {
+      path: "modules",
+    },
+  });
+  // console.log(innerCourseId)
+  
+  const videoId = req.body.videoId || innerCourseId.lessons[0].modules[0].id;
+  // console.log(videoId)
+  // return res.json({innerCourseId})
+  
+  // const findIfVideoExistInsideCourse = innerCourseId.lessons[0].modules.find(
+  //   (id) => id == videoId
+  // );
+  // console.log(findIfVideoExistInsideCourse)
+  // if (findIfVideoExistInsideCourse !== undefined || null) {
+  //   return next(
+  //     new AppError(
+  //       "You do not have access to this lesson. Kindly purchase the course to have access",
+  //       403
+  //     )
+  //   );
+  // }
+  // console.log(findIfVideoExistInsideCourse)
+  // // const newId = findCourseById;
+  // const videoToPlay = await Modules.findById(findIfVideoExistInsideCourse);
+  // if (videoToPlay.subscriptionRequired == true) {
+  //   return next(new AppError("You have not subscribed to this course", 401));
+  // }
 
   // //Getting MetaData about the video file to determine its size
   // const fileStat = await file.getMetadata();
@@ -156,8 +163,8 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
     status: "ok",
     success: true,
     message: "Course details fetched succesfully",
-    courseDetails: findCourseById,
-    videoToPlay,
+    courseDetails: innerCourseId,
+    // videoToPlay,
   });
 });
 
@@ -179,16 +186,16 @@ module.exports.PlayDecryptVideo = catchAsync(async (req, res, next) => {
       responseType: "arraybuffer", // Set the responseType to 'arraybuffer' for binary data
     });
     //console.log the response
-    
+
     //Decrypt the video
     // const decryptedVideo = de
-     const decryptedVideo = await decryptVideo(feedback.data, key, iv);
+    const decryptedVideo = await decryptVideo(feedback.data, key, iv);
     // console.log(decryptedVideo);
     res.status(202).json({
-      status: "ok", 
+      status: "ok",
       success: true,
       message: "Video fetched succesfully from Firebase storage",
-      video:decryptedVideo
+      video: decryptedVideo,
     });
   } catch (error) {
     throw new Error(error);

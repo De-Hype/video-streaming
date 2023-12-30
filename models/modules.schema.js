@@ -9,12 +9,6 @@ const moduleSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
- 
-  subscriptionRequired: {
-    type: Boolean,
-    required: true,
-    default: false,
-  }
 });
 
 const Modules = mongoose.model("module", moduleSchema);

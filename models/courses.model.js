@@ -24,20 +24,30 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
-      sections: [
-        {
-          course_name: {
-            type: String,
-            required: true,
-          },
-          firebase_url: {
-            type: String,
-            required: true,
-          },
-        },
+      subscriptionRequired: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
+
+      modules: [
+        { type: mongoose.Types.ObjectId, ref: "module", required: true },
       ],
+      // sections: [
+      //   {
+      //     course_name: {
+      //       type:String,
+      //       required:true,
+      //     },
+      //     firebase_url:{
+      //       type:String,
+      //       required:true,
+      //     }
+      //   },
+      // ],
     },
   ],
+  // modules: [{ type: mongoose.Types.ObjectId, ref: "module" , required:true}],
   subscribers: [
     {
       type: mongoose.Types.ObjectId,
