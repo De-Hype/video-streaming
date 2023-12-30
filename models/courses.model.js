@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 const courseSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -19,7 +18,26 @@ const courseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  modules: [{ type: mongoose.Types.ObjectId, ref: "module" , required:true}],
+  lessons: [
+    {
+      lesson_name: {
+        type: String,
+        required: true,
+      },
+      sections: [
+        {
+          course_name: {
+            type: String,
+            required: true,
+          },
+          firebase_url: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
+    },
+  ],
   subscribers: [
     {
       type: mongoose.Types.ObjectId,
