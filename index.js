@@ -8,7 +8,9 @@ const morgan = require("morgan");
 const globalErrorHandler = require("./utils/errors/errorController");
 const AppError = require("./utils/errors/AppError");
 const videoRouter = require("./routes/videos");
+const userRouter = require('./routes/user.routes')
 const Connect = require("./utils/Db.config");
+const Limiter = require("./middleware/Limiter");
 require("dotenv").config();
 
 const app = express();
@@ -28,6 +30,7 @@ app.use(mongoSanitize())
 app.use(morgan("dev"));
 app.use(cookieParser())
 app.use("/api", videoRouter);
+app.use('/api/auth', Limiter ,userRouter)
 
 app.all("*", (req, res, next) => {
   next(

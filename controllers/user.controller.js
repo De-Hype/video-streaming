@@ -1,22 +1,42 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+
 const User = require("../models/user.model");
 const catchAsync = require("../utils/errors/catchAsync");
+const hashPassword = require("../utils/hashPassword");
 require("dotenv").config();
 
 module.exports.Register = catchAsync(async (req, res, next) => {
-    
+  let { name, email, username, password } = req.body;
+  const findUser = await User.findOne({ email });
+  if (findUser) {
+    return next(new AppError("User already exist", 402));
+  }
+  const hashedPassword = hashPassword(password);
+
+  const createUser = await User({
+    name,
+    email,
+    username,
+    password: hashedPassword,
+  });
+  await createUser.save();
+  return res.status(202).json({
+    status: "ok",
+    message: "User account created succesfully",
+    createUser,
+  });
 });
+
 module.exports.Login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const findUser = await User.findOne({ email });
   if (!findUser) {
     return next(new AppError("User does not exist", 402));
   }
-  const isPasswordValid = await bcrypt.compare(password, findUser.password);
-  if (!isPasswordValid) {
+  if (findUser.password !== hashPassword(password)) {
     return next(new AppError("Incorrect login details", 402));
   }
+
   const user_auth = jwt.sign({ id: User._id }, process.env.Jwt_Secret_Key);
   res.cookie("user_auth", user_auth, {
     httpOnly: true,
