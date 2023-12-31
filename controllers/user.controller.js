@@ -20,7 +20,7 @@ module.exports.Register = catchAsync(async (req, res, next) => {
     email,
     password: `${hashedPassword}`,
   });
-  console.log(hashedPassword);
+
   await createUser.save();
   return res.status(202).json({
     status: "ok",

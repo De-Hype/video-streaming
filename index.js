@@ -1,17 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const xss = require('xss-clean');
-const cookieParser = require('cookie-parser')
-const mongoSanitize = require('express-mongo-sanitize');
+const xss = require("xss-clean");
+const cookieParser = require("cookie-parser");
+const mongoSanitize = require("express-mongo-sanitize");
 const morgan = require("morgan");
+require("dotenv").config();
+
 const globalErrorHandler = require("./utils/errors/errorController");
 const AppError = require("./utils/errors/AppError");
 const videoRouter = require("./routes/videos");
-const userRouter = require('./routes/user.routes')
+const userRouter = require("./routes/user.routes");
+const paymentRouter = require('./routes/purchase.routes');
 const Connect = require("./utils/Db.config");
 const Limiter = require("./middleware/Limiter");
-require("dotenv").config();
 
 const app = express();
 
@@ -26,11 +28,12 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(xss());
-app.use(mongoSanitize())
+app.use(mongoSanitize());
 app.use(morgan("dev"));
-app.use(cookieParser())
+app.use(cookieParser());
 app.use("/api", videoRouter);
-app.use('/api/auth', Limiter ,userRouter)
+app.use("/api/auth", Limiter, userRouter);
+app.use("/api/payment", paymentRouter);
 
 app.all("*", (req, res, next) => {
   next(
