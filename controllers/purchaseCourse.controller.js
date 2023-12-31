@@ -8,8 +8,10 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
   // const {id} = req.body;
 
   const params = JSON.stringify({
-    email: "customer@email.com",
-    amount: "20000",
+    email: `${req.body.email}` || "test@gmail.com",
+    currency: "NGN",
+    channels: ["card"],
+    amount: `${req.body.amount}00` || 20000,
   });
 
   const options = {
@@ -48,4 +50,44 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
   //We are going to change the isSubscription check of all the lessons in the module for this user
 });
 
-module.exports.VerifyPayment = catchAsync(async (req, res, next) => {});
+module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
+  const reference = req.params.reference
+  try {
+    const options = {
+      hostname: 'api.paystack.co',
+      port: 443,
+      path: `/transaction/verify/${reference}`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${process.env.Paystack_Secret_Key}`
+      }
+    }
+
+
+    const apiReq = https.request(options, (apiRes) => {
+      let data = '';
+
+      apiRes.on('data', (chunk) => {
+        data += chunk;
+      });
+
+      apiRes.on('end', () => {
+        console.log(JSON.parse(data));
+        return res.status(200).json(JSON.parse(data));
+      });
+    });
+
+    apiReq.on('error', (error) => {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    });
+
+    // End the request
+    apiReq.end();
+
+  } catch (error) {
+    // Handle any errors that occur during the request
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
