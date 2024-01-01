@@ -92,10 +92,11 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
         user.courses[0].lessons.forEach((lesson) => {
           lesson.subscriptionRequired = false;
         });
-        await user.save();
+
         //Now lets store the id of the user in our Subscribers model
         const subscriber_id = result.data.metadata.user_id;
-        const courseFetched = await Courses.findOne({ subscriber_id });
+        const courseFetched = await Courses.findById(product_id);
+
         if (!courseFetched) {
           return next(
             new AppError("Course with provided details does not exist", 402)
@@ -108,6 +109,7 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
         }
         courseFetched.subscribers.push(subscriber_id);
         await courseFetched.save();
+        await user.save();
 
         return res.status(200).json({ user, courseFetched, result });
       }
