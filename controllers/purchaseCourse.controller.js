@@ -6,16 +6,13 @@ const AppError = require("../utils/errors/AppError");
 const User = require("../models/user.model");
 
 module.exports.InitializePayment = catchAsync(async (req, res, next) => {
-  // const {id} = req.body;
-
   const params = JSON.stringify({
-    email: `${req.body.email}` || "test@gmail.com",
+    email: `${req.body.email}`,
     currency: "NGN",
     channels: ["card"],
-    amount: `${req.body.amount}00` || 20000,
+    amount: `${req.body.amount}00`,
     metadata: req.body.metadata,
   });
-  console.log(req.body.metdata);
 
   const options = {
     hostname: "api.paystack.co",
@@ -37,7 +34,7 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
       });
 
       resPaystack.on("end", () => {
-        console.log(JSON.parse(data));
+        // console.log(JSON.parse(data));
         return res.json(JSON.parse(data));
       });
     })
@@ -103,7 +100,7 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
       return next(new AppError(`${result.message}`, 402));
     });
   });
-  
+
   apiReq.on("error", (error) => {
     res.status(500).json({ error: "An error occurred" });
   });
