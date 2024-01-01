@@ -48,9 +48,6 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
 
   reqPaystack.write(params);
   reqPaystack.end();
-  //We are going to add the course id to our course collection.
-
-  //We are going to change the isSubscription check of all the lessons in the module for this user
 });
 //This endpoint will be sent to the success page of the frontend
 module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
@@ -89,31 +86,24 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
         if (user.courses.includes(product_id)) {
           return next(new AppError("Course already added to the user", 402));
         }
-        
+
         //Add the course to our users array
         user.courses.push(product_id);
 
-        await user.populate('courses')
-        
+        await user.populate("courses");
 
-       
-        
         user.courses[0].lessons.forEach((lesson) => {
           lesson.subscriptionRequired = false;
         });
         await user.save();
-        // await course.save();
-        
-        //We have to fetch the ID of the item we paid for via the metadata
-        //We have to add the item to our users courses section
-        //We have to update all subscriptionRequired to false for this particular user
-        return res.status(200).json({ user,  result });
+
+        return res.status(200).json({ user, result });
       }
 
       return next(new AppError(`${result.message}`, 402));
     });
   });
-
+  
   apiReq.on("error", (error) => {
     res.status(500).json({ error: "An error occurred" });
   });
