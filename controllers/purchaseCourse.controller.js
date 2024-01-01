@@ -93,8 +93,23 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
           lesson.subscriptionRequired = false;
         });
         await user.save();
+        //Now lets store the id of the user in our Subscribers model
+        const subscriber_id = result.data.metadata.user_id;
+        const courseFetched = await Courses.findOne({ subscriber_id });
+        if (!courseFetched) {
+          return next(
+            new AppError("Course with provided details does not exist", 402)
+          );
+        }
+        if (courseFetched.subscribers.includes(subscriber_id)) {
+          return next(
+            new AppError("This user already has access to this course ", 402)
+          );
+        }
+        courseFetched.subscribers.push(subscriber_id);
+        await courseFetched.save();
 
-        return res.status(200).json({ user, result });
+        return res.status(200).json({ user, courseFetched, result });
       }
 
       return next(new AppError(`${result.message}`, 402));
