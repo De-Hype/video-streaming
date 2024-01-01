@@ -1,7 +1,6 @@
 const catchAsync = require("../utils/errors/catchAsync");
 const crypto = require("crypto");
-// const ffmpeg = require("fluent-ffmpeg");
-// const upload = require("../utils/multer");
+
 const encryptVideo = require("../utils/encryptVideo");
 const path = require("path");
 const { initializeApp } = require("firebase/app");
@@ -11,12 +10,10 @@ const {
   getDownloadURL,
   uploadBytesResumable,
 } = require("firebase/storage");
-const bucket = require("../utils/firebase.config");
 const Modules = require("../models/modules.schema");
 const AppError = require("../utils/errors/AppError");
 const Courses = require("../models/courses.model");
 const firebaseConfig = require("../utils/firebase.config");
-const mongoose = require("mongoose");
 const axios = require("axios");
 const decryptVideo = require("../utils/decryptVideo");
 // const fs = require("fs");
@@ -25,18 +22,10 @@ const key = Buffer.from(process.env.key, "hex");
 const iv = Buffer.from(process.env.iv, "hex");
 
 module.exports.UploadVideo = catchAsync(async (req, res, next) => {
-  //This was to store encrypted file or video
+  
   const file = req.file;
-
   const { module_name, subscriptionRequired } = req.body;
-  // const readstream = file.createReadStream()
-  // console.log(stream);
-  // const findLessonByName = await Modules.findOne({ module_name });
-  // if (findLessonByName) {
-  //   return next(new AppError("Lesson with this name already exist", 403));
-  // }
-  // const data = await getVideoDurationInSeconds.getVideoDurationInSeconds(readstream.pipe())
-  // console.log(data)
+  
 
   // ffmpeg.ffprobe(file.originalname, (err, metadata) => {
   //   if (err) {
@@ -68,9 +57,6 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
   );
   // Grab the public url
   const downloadURL = await getDownloadURL(snapshot.ref);
-
-  // const fileUpload = bucket.file(filename);
-  // await fileUpload.save(encryptedFile);
 
   const createLessons = await Modules({
     module_name,
@@ -116,8 +102,7 @@ module.exports.GetCourseDetails = catchAsync(async (req, res, next) => {
   // console.log(findCourseById)
 
   const findCourseById = await Courses.findById(courseId);
-  // const findCourseById = await Courses.find;
-  // console.log(findCourseById)
+  
   if (!findCourseById) {
     return next(
       new AppError("This course does not exist. Please check course ID", 403)
@@ -185,10 +170,7 @@ module.exports.PlayDecryptVideo = catchAsync(async (req, res, next) => {
     const feedback = await axios.get(url, {
       responseType: "arraybuffer", // Set the responseType to 'arraybuffer' for binary data
     });
-    //console.log the response
-
-    //Decrypt the video
-    // const decryptedVideo = de
+  
     const decryptedVideo = await decryptVideo(feedback.data, key, iv);
     // console.log(decryptedVideo);
     res.status(202).json({
