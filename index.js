@@ -32,7 +32,7 @@ app.use(mongoSanitize());
 app.use(morgan("dev"));
 app.use(cookieParser());
 app.use("/api", videoRouter);
-app.use("/api/auth", Limiter, userRouter);
+app.use("/api/auth", userRouter);
 app.use("/api/payment", paymentRouter);
 
 app.all("*", (req, res, next) => {
