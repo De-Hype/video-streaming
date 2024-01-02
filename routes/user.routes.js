@@ -4,7 +4,6 @@ const router = require("express").Router();
 
 router.post("/register", Register);
 
-router.post("/login", Login);
-
+router.patch("/login", Login);
 
 module.exports = router;
