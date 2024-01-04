@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -16,13 +16,8 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: false,
   },
-  courses: [
-    {
-      type: mongoose.Types.ObjectId,
-      ref: "course",
-    },
-  ],
+  
 },{timestamps:true});
 
-const User = mongoose.model("user", userSchema);
-module.exports = User;
+const Admin = mongoose.model("admin", adminSchema);
+module.exports = Admin;

@@ -9,7 +9,7 @@ const moduleSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-});
+},{timestamps:true});
 
 const Modules = mongoose.model("module", moduleSchema);
 module.exports = Modules;

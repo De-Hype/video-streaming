@@ -54,7 +54,7 @@ const courseSchema = new mongoose.Schema({
       ref: "user",
     },
   ],
-});
+},{timestamps:true});
 
 const Courses = mongoose.model("course", courseSchema);
 module.exports = Courses;
