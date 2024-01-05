@@ -1,7 +1,12 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  name: {
+  first_name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  last_name: {
     type: String,
     required: true,
     unique: true,
@@ -20,6 +25,7 @@ const userSchema = new mongoose.Schema({
     {
       type: mongoose.Types.ObjectId,
       ref: "course",
+      unique:true,
     },
   ],
 },{timestamps:true});

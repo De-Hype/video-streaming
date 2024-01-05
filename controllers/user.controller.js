@@ -7,16 +7,16 @@ const AppError = require("../utils/errors/AppError");
 require("dotenv").config();
 
 module.exports.Register = catchAsync(async (req, res, next) => {
-  let {name, email, password } = req.body;
+  let { first_name, last_name, email, password } = req.body;
   const findUser = await User.findOne({ email });
   if (findUser) {
     return next(new AppError("User already exist", 402));
   }
   const hashedPassword = hashPassword(password);
-  
 
   const createUser = await User({
-    name,
+    first_name,
+    last_name,
     email,
     password: `${hashedPassword}`,
   });

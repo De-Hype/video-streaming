@@ -75,7 +75,7 @@ module.exports.UploadVideo = catchAsync(async (req, res, next) => {
 });
 
 module.exports.CreateCourses = catchAsync(async (req, res, next) => {
-  const { title, creator, thumbnail, description, lessons } = req.body;
+  const { title, creator, thumbnail, description, price, lessons } = req.body;
   const findCourseByName = await Courses.findOne({ title });
   if (findCourseByName) {
     return next(new AppError("Course with this name already exist", 403));
@@ -86,6 +86,7 @@ module.exports.CreateCourses = catchAsync(async (req, res, next) => {
     creator,
     thumbnail,
     description,
+    price,
     lessons,
   });
   await createCourse.save();

@@ -18,6 +18,10 @@ const courseSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  price:{
+    type:Number,
+    required: true,
+  },
   lessons: [
     {
       lesson_name: {
@@ -31,7 +35,7 @@ const courseSchema = new mongoose.Schema({
       },
 
       modules: [
-        { type: mongoose.Types.ObjectId, ref: "module", required: true },
+        { type: mongoose.Types.ObjectId, ref: "module", required: true, unique:true },
       ],
       // sections: [
       //   {
@@ -52,8 +56,10 @@ const courseSchema = new mongoose.Schema({
     {
       type: mongoose.Types.ObjectId,
       ref: "user",
+      unique:true,
     },
   ],
+  
 },{timestamps:true});
 
 const Courses = mongoose.model("course", courseSchema);

@@ -6,10 +6,51 @@ const AppError = require("../utils/errors/AppError");
 const User = require("../models/user.model");
 
 module.exports.InitializePayment = catchAsync(async (req, res, next) => {
+  const subscriber_id = req.body.metadata.user_id;
+  const product_ids = req.body.metadata.cart_id;
+  const email = req.body.email;
+  const amount = req.body.amount;
+  let initialAmount = 0;
+  //[{id:46656565656, quantity:2},{id:4shshsgg5656, quantity:3}, ]
+  //Checking to see if the user is even valid
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError("User with provided details does not exist", 402));
+  }
+  if (user.id != subscriber_id) {
+    return next(new AppError("Invalid user details", 402));
+  }
+  //Checking to see prices for items that i am getting, actually tallies with the total amount
+  //We will fetch all courses with provided id
+  const coursesFetched = await Courses.find({ _id: { $in: product_ids } });
+  // console.log(coursesFetched)
+  if (coursesFetched.length === 0) {
+    return next(
+      new AppError(
+        "Payment failed because, course with any of the ID's not found",
+        405
+      )
+    );
+  }
+  //Iterate through their prices, and on each iteration, we add the sum of the items
+  for (const courses of coursesFetched) {
+    initialAmount += courses.price;
+  }
+  //We compare if the sum that we are getting actually equals the amount we are paying
+  if (amount !== initialAmount) {
+    return next(
+      new AppError(
+        `Payment failed because you tried pay insufficient amount. Please pay ${initialAmount} Naira`,
+        402
+      )
+    );
+  }
+
   const params = JSON.stringify({
-    email: `${req.body.email}`,
+    first_name: `${user.first_name}`,
+    last_name: `${user.last_name}`,
+    email,
     currency: "NGN",
-    channels: ["card"],
     amount: `${req.body.amount}00`,
     metadata: req.body.metadata,
   });
@@ -72,48 +113,65 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
 
       if (result.status != false && result.data.status === "success") {
         const email = result.data.customer.email;
+        const subscriber_id = result.data.metadata.user_id;
+        const product_ids = result.data.metadata.cart_id;
         const user = await User.findOne({ email });
         if (!user) {
           return next(
             new AppError("User with provided details does not exist", 402)
           );
         }
-
-        const product_id = result.data.metadata.cart_id;
-        if (user.courses.includes(product_id)) {
-          return next(new AppError("Course already added to the user", 402));
+        // console.log(user.id)
+        if (user.id != subscriber_id) {
+          return next(new AppError("Invalid user details", 402));
         }
-
-        //Add the course to our users array
-        user.courses.push(product_id);
-
-        await user.populate("courses");
-
-        user.courses[0].lessons.forEach((lesson) => {
-          lesson.subscriptionRequired = false;
-        });
-
-        //Now lets store the id of the user in our Subscribers model
-        const subscriber_id = result.data.metadata.user_id;
-        const courseFetched = await Courses.findById(product_id);
+        const courseFetched = await Courses.find({ _id: { $in: product_ids } });
 
         if (!courseFetched) {
           return next(
             new AppError("Course with provided details does not exist", 402)
           );
         }
-        if (courseFetched.subscribers.includes(subscriber_id)) {
-          return next(
-            new AppError("This user already has access to this course ", 402)
-          );
-        }
-        courseFetched.subscribers.push(subscriber_id);
-        await courseFetched.save();
-        await user.save();
 
+        // if (user.courses.some(value => product_ids.includes(value))) {
+        //   return next(new AppError("Course already added to the user", 402));
+        // }
+
+        //Add the course to our users array
+        user.courses.concat(product_ids);
+
+        await user.populate("courses");
+
+        user.courses.forEach((item) => {
+          item.lessons.forEach((lesson) => {
+            lesson.subscriptionRequired = false;
+          });
+        });
+
+        //Now lets store the id of the user in our Subscribers model
+
+        return res.json(courseFetched);
+        for (const courses of courseFetched) {
+          const subscribersArray = Object;
+        }
+
+        //  courseFetched.every(courses=>{
+        //   // courses.subscribers.includes(subscriber_id)
+        //   if (courses.subscribers.includes(subscriber_id)) {
+        //     return next(
+        //       new AppError("This user already has access to this course ", 402)
+        //     );
+        //   }
+        // })
+
+        courseFetched.forEach(async (courses) => {
+          courses.subscribers.push(subscriber_id);
+          await courses.save();
+        });
+
+        await user.save();
         return res.status(200).json({ user, courseFetched, result });
       }
-
       return next(new AppError(`${result.message}`, 402));
     });
   });
