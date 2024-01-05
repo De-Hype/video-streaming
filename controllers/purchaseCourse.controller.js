@@ -133,14 +133,17 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
           );
         }
 
-        // if (user.courses.some(value => product_ids.includes(value))) {
-        //   return next(new AppError("Course already added to the user", 402));
-        // }
-
-        //Add the course to our users array
-        user.courses.concat(product_ids);
-
+        user.courses.push(...product_ids);
+        
         await user.populate("courses");
+
+        const isSubscriber = courseFetched.some(course => course.subscribers.includes(subscriber_id));
+        
+        if (isSubscriber){
+          return next(
+            new AppError("This user has already bought this course", 402)
+          );
+        }
 
         user.courses.forEach((item) => {
           item.lessons.forEach((lesson) => {
@@ -149,26 +152,10 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
         });
 
         //Now lets store the id of the user in our Subscribers model
-
-        return res.json(courseFetched);
-        for (const courses of courseFetched) {
-          const subscribersArray = Object;
-        }
-
-        //  courseFetched.every(courses=>{
-        //   // courses.subscribers.includes(subscriber_id)
-        //   if (courses.subscribers.includes(subscriber_id)) {
-        //     return next(
-        //       new AppError("This user already has access to this course ", 402)
-        //     );
-        //   }
-        // })
-
         courseFetched.forEach(async (courses) => {
           courses.subscribers.push(subscriber_id);
-          await courses.save();
+           await courses.save();
         });
-
         await user.save();
         return res.status(200).json({ user, courseFetched, result });
       }
