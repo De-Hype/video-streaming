@@ -11,7 +11,7 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
   const email = req.body.email;
   const amount = req.body.amount;
   let initialAmount = 0;
-  //[{id:46656565656, quantity:2},{id:4shshsgg5656, quantity:3}, ]
+  
   //Checking to see if the user is even valid
   const user = await User.findOne({ email });
   if (!user) {
@@ -23,7 +23,7 @@ module.exports.InitializePayment = catchAsync(async (req, res, next) => {
   //Checking to see prices for items that i am getting, actually tallies with the total amount
   //We will fetch all courses with provided id
   const coursesFetched = await Courses.find({ _id: { $in: product_ids } });
-  // console.log(coursesFetched)
+  
   if (coursesFetched.length === 0) {
     return next(
       new AppError(
@@ -121,7 +121,7 @@ module.exports.VerifyPayment = catchAsync(async (req, res, next) => {
             new AppError("User with provided details does not exist", 402)
           );
         }
-        // console.log(user.id)
+        
         if (user.id != subscriber_id) {
           return next(new AppError("Invalid user details", 402));
         }

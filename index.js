@@ -11,6 +11,7 @@ const globalErrorHandler = require("./utils/errors/errorController");
 const AppError = require("./utils/errors/AppError");
 const videoRouter = require("./routes/videos");
 const userRouter = require("./routes/user.routes");
+const adminRouter = require("./routes/admin.routes");
 const paymentRouter = require('./routes/purchase.routes');
 const Connect = require("./utils/Db.config");
 const Limiter = require("./middleware/Limiter");
@@ -33,6 +34,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 app.use("/api", videoRouter);
 app.use("/api/auth", userRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/payment", paymentRouter);
 
 app.all("*", (req, res, next) => {
