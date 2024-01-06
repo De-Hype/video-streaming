@@ -164,6 +164,20 @@ module.exports.GetAllCourses = catchAsync(async (req, res, next) => {
   });
 });
 
+
+module.exports.SearchCourse = catchAsync(async (req, res, next)=>{
+  const {searchTerm } = req.query;
+  if (searchTerm == "" || undefined){
+      return next(new AppError("Search query not found. Please enter a course you want to search for", 404));
+  }
+  const resultFromCourses = await Courses.find({title:{$regex:searchTerm, $options:"i"}});
+  if(resultFromCourses.length ==0){
+      return next(new AppError(`Could not find anything with value ${searchTerm}`, 404));
+  }
+  res.status(200). json({success:true, status:"ok", resultFromCourses})
+})
+
+
 module.exports.PlayDecryptVideo = catchAsync(async (req, res, next) => {
   const { url } = req.body;
   // Make a request to Firebase storage

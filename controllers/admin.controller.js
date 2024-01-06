@@ -97,7 +97,7 @@ module.exports.AdminChangePassword = catchAsync(async (req, res, next)=>{
 })
 
 module.exports.AdminSearchEverything = catchAsync(async (req, res, next)=>{
-    const {searchTerm } = req.body;
+    const {searchTerm } = req.query;
     if (searchTerm == "" || undefined){
         return next(new AppError("Search query not found. Please enter a course you want to search for", 404));
     }
