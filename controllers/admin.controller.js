@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const catchAsync = require("../utils/errors/catchAsync");
-const hashPassword = require("../utils/hashPassword");
-const AppError = require("../utils/errors/AppError");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const path = require("path");
 const { initializeApp } = require("firebase/app");
 const {
   getStorage,
@@ -9,10 +10,12 @@ const {
   getDownloadURL,
   uploadBytesResumable,
 } = require("firebase/storage");
-
 const firebaseConfig = require("../utils/firebase.config");
-const Admin = require("../models/admin.model");
 require("dotenv").config();
+const Admin = require("../models/admin.model");
+const Courses = require("../models/courses.model");
+const AppError = require("../utils/errors/AppError");
+
 
 module.exports.AdminRegister = catchAsync(async (req, res, next) => {
   let { first_name, last_name, email, password } = req.body;
@@ -36,26 +39,26 @@ module.exports.AdminRegister = catchAsync(async (req, res, next) => {
   // Upload the file in the bucket storage
   const snapshot = await uploadBytesResumable(
     storageRef,
-    encryptedFile,
+    file,
     metadata
   );
   // Grab the public url
   const downloadURL = await getDownloadURL(snapshot.ref);
-  const hashedPassword = hashPassword(password);
-
-  const createUser = await User({
+  const hashedPassword = await bcrypt.hash(password, 10);
+  console.log(downloadURL)
+  const createAdmin = await Admin.create({
     first_name,
     last_name,
     profile_picture: downloadURL,
     email,
-    password: `${hashedPassword}`,
+    password: hashedPassword,
   });
 
-  await createUser.save();
+//   await createUser.save();
   return res.status(202).json({
     status: "ok",
-    message: "User account created succesfully",
-    createUser,
+    message: "Admin account created succesfully",
+    createAdmin,
   });
 });
 
@@ -63,10 +66,12 @@ module.exports.AdminLogin = catchAsync(async (req, res, next) => {
   const { email, password, rememberMe } = req.body;
   const findUser = await Admin.findOne({ email });
   if (!findUser) {
-    return next(new AppError("User does not exist", 402));
+    return next(new AppError("User does not exist", 404));
   }
-  if (findUser.password !== hashPassword(password)) {
-    return next(new AppError("Incorrect login details", 402));
+  const passwordMatch = await bcrypt.compare(password,findUser.password )
+
+  if (!passwordMatch) {
+    return next(new AppError("Incorrect login details", 404));
   }
   const tokenExpiration = rememberMe ? "7d" : "1d";
   const secureOption =
@@ -74,15 +79,31 @@ module.exports.AdminLogin = catchAsync(async (req, res, next) => {
       ? true
       : false;
 
-  const user_auth = jwt.sign({ id: findUser._id }, process.env.Jwt_Secret_Key, {
+  const admin_auth = jwt.sign({ id: findUser._id }, process.env.Jwt_Secret_Key, {
     expiresIn: tokenExpiration,
   });
 
-  res.cookie("user_auth", user_auth, {
+  res.cookie("admin_auth", admin_auth, {
     httpOnly: true,
     secure: secureOption,
   });
   res
     .status(202)
-    .json({ status: "ok", message: "User succesfully logged in", findUser });
+    .json({ status: "ok", message: "Admin succesfully logged in", findUser });
 });
+
+module.exports.AdminChangePassword = catchAsync(async (req, res, next)=>{
+
+})
+
+module.exports.AdminSearchEverything = catchAsync(async (req, res, next)=>{
+    const {searchTerm } = req.body;
+    if (searchTerm == "" || undefined){
+        return next(new AppError("Search query not found. Please enter a course you want to search for", 404));
+    }
+    const resultFromCourses = await Courses.find({title:{$regex:searchTerm, $options:"i"}});
+    if(resultFromCourses.length ==0){
+        return next(new AppError(`Could not find anything with value ${searchTerm}`, 404));
+    }
+    res.status(200). json({success:true, status:"ok", resultFromCourses})
+})

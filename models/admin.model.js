@@ -4,12 +4,12 @@ const adminSchema = new mongoose.Schema({
   first_name: {
     type: String,
     required: true,
-    unique: true,
+
   },
   last_name: {
     type: String,
     required: true,
-    unique: true,
+    
   },
   email: {
     type: String,
@@ -23,13 +23,12 @@ const adminSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    unique: false,
+
   },
-  courses: [
+  coursesCreated: [
     {
       type: mongoose.Types.ObjectId,
       ref: "course",
-      unique:true,
     },
   ],
 },{timestamps:true});

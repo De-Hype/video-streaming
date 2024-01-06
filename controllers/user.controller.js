@@ -1,27 +1,29 @@
 const jwt = require("jsonwebtoken");
-
+const bcrypt = require("bcryptjs");
 const User = require("../models/user.model");
 const catchAsync = require("../utils/errors/catchAsync");
-const hashPassword = require("../utils/hashPassword");
 const AppError = require("../utils/errors/AppError");
 require("dotenv").config();
 
 module.exports.Register = catchAsync(async (req, res, next) => {
-  let { first_name, last_name, email, password } = req.body;
+  const { first_name, last_name, email, password } = req.body;
   const findUser = await User.findOne({ email });
-  if (findUser) {
-    return next(new AppError("User already exist", 402));
+ 
+  if (findUser){
+    return next(new AppError("User already exist", 403));
   }
-  const hashedPassword = hashPassword(password);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  const createUser = await User({
-    first_name,
-    last_name,
+  const createUser = await User.create({
+    first_name:first_name,
+    last_name:last_name,
     email,
-    password: `${hashedPassword}`,
+    password: hashedPassword,
+     
   });
-
-  await createUser.save();
+  // const {password, ...userDetails} = createUser
+  
+  // await createUser.save();
   return res.status(202).json({
     status: "ok",
     message: "User account created succesfully",
@@ -35,7 +37,9 @@ module.exports.Login = catchAsync(async (req, res, next) => {
   if (!findUser) {
     return next(new AppError("User does not exist", 402));
   }
-  if (findUser.password !== hashPassword(password)) {
+  const passwordMatch = await bcrypt.compare(password,findUser.password )
+
+  if (!passwordMatch) {
     return next(new AppError("Incorrect login details", 402));
   }
 
@@ -47,3 +51,19 @@ module.exports.Login = catchAsync(async (req, res, next) => {
     .status(202)
     .json({ status: "ok", message: "User succesfully logged in", findUser });
 });
+
+
+module.exports.FetchAllUsers = catchAsync(async (req, res, next)=>{
+  //Get Number of all registered students
+  const fetchAllUsers = await User.find();
+  if(fetchAllUsers.length <= 0){
+      return next(new AppError("No users found", 402));
+  }
+  //Check that users passwords is not returned
+  res
+  .status(200)
+  .json({ status: "ok", message: "All users fetched succesfully.", fetchAllUsers });
+  
+  //Get the total number of courses
+
+})
