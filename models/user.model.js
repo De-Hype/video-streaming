@@ -15,10 +15,19 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    gender: {
+      type: String,
+      required: true,
+      enum: {
+        values: ["male", "female"],
+        message: `{VALUE} is neither male nor female`,
+      },
+    },
+
     password: {
       type: String,
       required: true,
-    },
+      },
 
     courses: [
       {
@@ -26,6 +35,10 @@ const userSchema = new mongoose.Schema(
         ref: "course",
       },
     ],
+    lastLogin: {
+      type:Date,
+      default:null,
+    },
   },
   { timestamps: true }
 );
