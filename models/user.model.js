@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    profile_picture: {
+      type: String,
+      required: true,
+    },
     gender: {
       type: String,
       required: true,
